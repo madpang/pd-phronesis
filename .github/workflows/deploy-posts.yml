@@ -1,0 +1,75 @@
+name: Build & Deploy Post
+run-name: GitHub bot is building and deploying the post
+on:
+  push:
+    branches: [main, feature/**]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6  # @note: it checkout *this* repo. as $GITHUB_WORKSPACE
+      with:
+        submodules: recursive
+        fetch-depth: 1
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Build the mmd2html converter
+      run: |
+        cd mmd2html
+        chmod +x ./gradlew
+        ./gradlew build
+
+    - name: Clone the *public* deployment repo
+      uses: actions/checkout@v6
+      with:
+        repository: madpang/madpang.github.io
+        ref: gh-pages
+        fetch-depth: 1
+        path: deployment
+        token: ${{ secrets.PD_SITE_MAINTE }}
+
+    - name: Verify deployment repo
+      run: |
+        ls -la deployment
+        cat deployment/README.md || echo "No README.md"
+
+    # - name: Configure Git identity
+    #   run: |
+    #     git config user.name "github-actions[bot]"
+    #     git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+    # - name: Retrieve the post index
+    #   run: |
+    #     mkdir -p artifacts
+    #     git fetch origin gh-pages
+    #     git show origin/gh-pages:artifacts/post-index.txt > artifacts/post-index.txt
+
+    # - name: BUILD THE POST
+    #   run: |
+    #     pwsh -nop ./scripts/prepare-build.ps1
+    #     pwsh -nop ./scripts/export-build.ps1
+
+    # - name: Switch to gh-pages branch to collect build artifacts
+    #   run: |
+    #     git checkout gh-pages
+    #     git show origin/main:scripts/deploy-build.ps1 > deploy-build.ps1
+    #     pwsh -nop ./deploy-build.ps1
+    #     git show origin/main:index.html > index.html
+    #     git checkout origin/main -- commons
+    
+    # - name: Push the changes to gh-pages branch
+    #   run: |
+    #     git add .
+    #     git commit -m "Deploy from main @ ${{ github.sha }}" && git push origin gh-pages || echo "No changes to commit"
