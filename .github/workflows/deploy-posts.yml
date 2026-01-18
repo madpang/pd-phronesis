@@ -18,6 +18,7 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 1
+        token: ${{ secrets.PD_SITE_MAINTE }}
 
     - name: Set up JDK
       uses: actions/setup-java@v4
