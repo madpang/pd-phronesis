@@ -12,10 +12,10 @@
 
 	@author: madpang
 
-	@date: [created: 2025-06-03, updated: 2025-08-11]
+	@date: [created: 2025-06-03, updated: 2026-01-20]
 #>
 
-$kWorkspace = "tmp-ws"
+$kWorkspace = "workspace"
 $kContents = "contents"
 
 # if contents directory does not exist, abort
