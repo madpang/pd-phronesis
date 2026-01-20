@@ -10,14 +10,15 @@
 
 	@author: madpang
 
-	@date: [created: 2025-06-01, updated: 2025-08-11]
+	@date: [created: 2025-06-01, updated: 2026-01-20]
 #>
 
-$kWorkspace = "tmp-ws"
+$kWorkspace = "workspace"
 $kContents = "contents"
 $kArtifacts = "artifacts"
-$oldIndexFile = Join-Path $kArtifacts "post-index.txt"
-$hotIndexFile = Join-Path $kWorkspace $kArtifacts "post-index.txt"
+$artifactsDir = Join-Path $kWorkspace $kArtifacts
+$oldIndexFile = Join-Path $kWorkspace "deployed-post-index.txt"
+$hotIndexFile = Join-Path $artifactsDir "post-index.txt"
 
 # if contents directory does not exist, abort
 if (-not (Test-Path $kContents)) {
@@ -25,12 +26,15 @@ if (-not (Test-Path $kContents)) {
 	exit 1
 }
 
-# If temporary workspace already exists, remove it and create a new one
-if (Test-Path $kWorkspace) {
-	Remove-Item -Path $kWorkspace -Recurse -Force
+# If workspace directory does not exist, abort
+if (-not (Test-Path $kWorkspace)) {
+	Write-Error "[ERROR  ] Workspace does not exist."
+	exit 1
 }
-New-Item -Path $kWorkspace -ItemType Directory | Out-Null
-New-Item -Path (Join-Path $kWorkspace $kArtifacts) -ItemType Directory | Out-Null
+if (Test-Path $artifactsDir) {
+	Remove-Item -Path $artifactsDir -Recurse -Force
+}
+New-Item -Path $artifactsDir -ItemType Directory | Out-Null
 
 Write-Host "[INFO   ] Scanning current post database..."
 $currentPostList = Get-ChildItem $kContents -Directory | Where-Object { $_.Name -match '^(?<tag>[A-Z]{2})_(?<key>\d{4}_\d{2}_\d{2}_[a-z])$' } | ForEach-Object {

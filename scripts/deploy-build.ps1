@@ -12,39 +12,39 @@
 
 	@author: madpang
 
-	@date: [created: 2025-06-03, updated: 2025-08-11]
+	@date: [created: 2025-06-03, updated: 2026-01-20]
 #>
 
-$kWorkspace = "tmp-ws"
+$kWorkspace = "workspace"
 $kArtifacts = "artifacts"
 
-$artifactsExportDir = Join-Path $kWorkspace $kArtifacts
+$artifactsSourceDir = Join-Path $kWorkspace $kArtifacts
+$artifactsDeployDir = Join-Path "public" $kArtifacts
 $deletedListFile = Join-Path $kWorkspace "posts-to-delete.txt"
 
-# If the temporary artifacts directory does not exist, abort
-if (-not (Test-Path $kWorkspace)) {
-	Write-Error "[ERROR  ] Temporary workspace directory '$kWorkspace' does not exist."
+# If the source artifacts directory does not exist, abort
+if (-not (Test-Path $artifactsSourceDir)) {
+	Write-Host "[ERROR  ] Artifacts source directory does not exist: $artifactsSourceDir"
 	exit 1
 }
 
-# Ensure artifacts directory exists
-if (-not (Test-Path $kArtifacts)) {
-	New-Item -Path $kArtifacts -ItemType Directory | Out-Null
+# If the deployment artifacts directory does not exist, create it
+if (-not (Test-Path $artifactsDeployDir)) {
+	New-Item -Path $artifactsDeployDir -ItemType Directory | Out-Null
 }
 
-# Copy new/updated HTML files from tmp-ws/artifacts/ to artifacts/
-Get-ChildItem -Path $artifactsExportDir -Directory | ForEach-Object {
-	$destinationPath = Join-Path $kArtifacts $_.Name
-	Copy-Item -Path $_.FullName -Destination $kArtifacts -Force -Recurse
+# Copy new/updated HTML files from workspace/artifacts/ to public/artifacts/
+Get-ChildItem -Path $artifactsSourceDir -Directory | ForEach-Object {
+	Copy-Item -Path $_.FullName -Destination $artifactsDeployDir -Force -Recurse
 }
 # Overwrite `artifacts/post-index.txt`.
-Copy-Item -Path (Join-Path $artifactsExportDir "post-index.txt") -Destination (Join-Path $kArtifacts "post-index.txt") -Force
+Copy-Item -Path (Join-Path $artifactsSourceDir "post-index.txt") -Destination (Join-Path $artifactsDeployDir "post-index.txt") -Force
 
 # Remove deleted posts from artifacts/
 if (Test-Path $deletedListFile) {
 	$deletedList = Get-Content $deletedListFile -Encoding utf8
 	foreach ($item in $deletedList) {
-		$artifactPath = Join-Path $kArtifacts $item
+		$artifactPath = Join-Path $artifactsDeployDir $item
 		if (Test-Path $artifactPath) {
 			Remove-Item -Path $artifactPath -Recurse -Force
 		}

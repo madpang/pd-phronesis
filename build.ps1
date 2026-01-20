@@ -34,12 +34,6 @@ if ($LASTEXITCODE -ne 0) {
 	exit $LASTEXITCODE
 }
 
-Write-Host "[INFO   ] Cleaning up post build workspace..."
-# Clean up the temporary workspace
-$kWorkspace = "tmp-ws"
-if (Test-Path $kWorkspace) {
-	Remove-Item -Path $kWorkspace -Recurse -Force
-}
-
 Write-Host "[INFO   ] Build process completed successfully."
+
 exit 0

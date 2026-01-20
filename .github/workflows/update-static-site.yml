@@ -1,5 +1,5 @@
-name: Build & Deploy Post
-run-name: GitHub bot is building and deploying the post
+name: Update Static Site
+run-name: GitHub bot is creating and updating static contents for the GiHub Pages repo.
 on:
   push:
     branches: [main, feature/**]
@@ -38,29 +38,31 @@ jobs:
         repository: madpang/madpang.github.io
         ref: gh-pages
         fetch-depth: 1
-        path: deployment
+        path: public
         token: ${{ secrets.PD_SITE_MAINTE }}
 
-    - name: Verify deployment repo
+    - name: Retrieve the already *deployed* post index
       run: |
-        ls -la deployment
-        cat deployment/README.md || echo "No README.md"
+        mkdir workspace
+        cp public/artifacts/post-index.txt workspace/deployed-post-index.txt
 
-    # - name: Configure Git identity
-    #   run: |
-    #     git config user.name "github-actions[bot]"
-    #     git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    - name: Build the posts
+      run: |
+        pwsh -nop ./scripts/prepare-build.ps1
+        pwsh -nop ./scripts/export-build.ps1
 
-    # - name: Retrieve the post index
-    #   run: |
-    #     mkdir -p artifacts
-    #     git fetch origin gh-pages
-    #     git show origin/gh-pages:artifacts/post-index.txt > artifacts/post-index.txt
+    - name: Sync build artifacts to deployment repo
+      run: |
+        pwsh -nop ./scripts/deploy-build.ps1
+        cp index.html public/index.html
+        rsync -av --delete commons/ public/commons/
 
-    # - name: BUILD THE POST
-    #   run: |
-    #     pwsh -nop ./scripts/prepare-build.ps1
-    #     pwsh -nop ./scripts/export-build.ps1
+    - name: Commit and Push the changes to gh-pages branch
+        run: |
+          cd public
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git diff
 
     # - name: Switch to gh-pages branch to collect build artifacts
     #   run: |
