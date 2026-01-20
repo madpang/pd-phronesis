@@ -57,22 +57,10 @@ jobs:
         cp index.html public/index.html
         rsync -av --delete commons/ public/commons/
 
-    - name: Commit and Push the changes to gh-pages branch
+    - name: Commit and Push the changes to GiHub Pages repo
       run: |
         cd public
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git diff
-
-    # - name: Switch to gh-pages branch to collect build artifacts
-    #   run: |
-    #     git checkout gh-pages
-    #     git show origin/main:scripts/deploy-build.ps1 > deploy-build.ps1
-    #     pwsh -nop ./deploy-build.ps1
-    #     git show origin/main:index.html > index.html
-    #     git checkout origin/main -- commons
-    
-    # - name: Push the changes to gh-pages branch
-    #   run: |
-    #     git add .
-    #     git commit -m "Deploy from main @ ${{ github.sha }}" && git push origin gh-pages || echo "No changes to commit"
+        git add .
+        git commit -m "Deploy from commit ${{ github.sha }}" && git push origin gh-pages || echo "No changes to commit"
