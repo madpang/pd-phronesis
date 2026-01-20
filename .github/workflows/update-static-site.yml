@@ -58,11 +58,11 @@ jobs:
         rsync -av --delete commons/ public/commons/
 
     - name: Commit and Push the changes to gh-pages branch
-        run: |
-          cd public
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git diff
+      run: |
+        cd public
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git diff
 
     # - name: Switch to gh-pages branch to collect build artifacts
     #   run: |
