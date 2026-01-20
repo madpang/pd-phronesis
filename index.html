@@ -4,7 +4,7 @@
 	@brief:    the entry point of the website (currently manually maintained)
 	@details:  take care the relative paths when copying/moving this file
 	@author:   madpang
-	@date:     [created on 2025-02-24, updated on 2026-01-04]
+	@date:     [created on 2025-02-24, updated on 2026-01-12]
 -->
 <html lang="en-US">
 <head>
@@ -22,13 +22,16 @@ Hello Panda!
 </head>
 <body>
 <header
-	class="pd-viewport-anchor pd-anchor-t-0 pd-anchor-l-0 pd-h-96 pd-w-full pd-bg-color pd-header-bg-color pd-z-1000 pd-flex-container pd-layout-row pd-center-y"
+	class="pd-viewport-anchor pd-anchor-t-0 pd-anchor-l-0 pd-h-96 pd-w-full pd-bg-color pd-z-1000 pd-flex-container pd-layout-row pd-center-y"
+	style="
+		--pd-bg-color: var(--color-mercury);
+		--pd-bg-color-dark: var(--color-licorice);"
 	aria-label="Page Header" >
 	<button
 		id="btn-go-home"
 		class="pd-btn pd-h-full pd-w-96 pd-flex-0"
-		style="--pd-bg-color: var(--color-lime);"
-		data-href="../../index.html"
+		style="--pd-btn-bg-color: var(--color-lime);"
+		data-href="./index.html"
 		aria-label="Go HomePage" >
 	</button>
 	<nav
@@ -37,26 +40,38 @@ Hello Panda!
 		<div class="pd-dummy pd-h-full pd-w-96 pd-flex-0" aria-hidden="true" ></div>
 		<button
 			id="btn-link-stack"
-			class="pd-btn pd-h-full pd-stack-label-img pd-flex-0"
-			style="--pd-width: 170px;"
+			class="pd-btn pd-h-full pd-flex-0"
+			style="
+				--pd-btn-width: 170px;
+				--pd-btn-bg-img: url('../../commons/images/STACK-label.png');
+				--pd-btn-bg-img-dark: url('../../commons/images/STACK-label-dark.png');"
 			aria-label="STACK Link" >
 		</button>
 		<button
 			id="btn-link-heap"
-			class="pd-btn pd-h-full pd-heap-label-img pd-flex-0"
-			style="--pd-width: 140px;"
+			class="pd-btn pd-h-full pd-flex-0"
+			style="
+				--pd-btn-width: 140px;
+				--pd-btn-bg-img: url('../../commons/images/HEAP-label.png');
+				--pd-btn-bg-img-dark: url('../../commons/images/HEAP-label-dark.png');"
 			aria-label="HEAP Link" >
 		</button>
 		<button
 			id="btn-link-archive"
-			class="pd-btn pd-h-full pd-archive-label-img pd-flex-0"
-			style="--pd-width: 212px;"
+			class="pd-btn pd-h-full pd-flex-0"
+			style="
+				--pd-btn-width: 212px;
+				--pd-btn-bg-img: url('../../commons/images/ARCHIVE-label.png');
+				--pd-btn-bg-img-dark: url('../../commons/images/ARCHIVE-label-dark.png');"
 			aria-label="ARCHIVE Link" >
 		</button>
 	</nav>
 	<button
 		id="btn-toggle-theme"
-		class="pd-btn pd-h-full pd-w-96 pd-theme-switch-img pd-flex-0 pd-ml-auto"
+		class="pd-btn pd-h-full pd-w-96 pd-flex-0 pd-ml-auto"
+		style="
+			--pd-btn-bg-img: url('../../commons/images/theme-switch.png');
+			--pd-btn-bg-img-dark: url('../../commons/images/theme-switch-dark.png');"
 		aria-label="Toggle Light/Dark Theme" >
 	</button>
 </header>

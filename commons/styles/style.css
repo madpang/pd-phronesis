@@ -2,7 +2,7 @@
 	@file:   pd-wysheid/commons/styles/style.css
 	@brief:  The CSS style-sheet for the pd-wysheid
 	@author: madpang
-	@date:   [created: 2024-04-21, updated: 2026-01-03]
+	@date:   [created: 2024-04-21, updated: 2026-01-07]
 */
 
 /* === RESOURCES === */
@@ -88,27 +88,13 @@
 body {
 	--bg-color: var(--color-snow);
 	--fg-color: var(--color-lead);
-	--btn-hover-mask: rgba(0, 0, 0, 0.1);
 	--code-blk-bg: var(--color-mercury);
-	--header-bg-color: var(--color-mercury);
-
-	--pd-stack-label-img: url('../../commons/images/STACK-label.png');
-	--pd-heap-label-img: url('../../commons/images/HEAP-label.png');
-	--pd-archive-label-img: url('../../commons/images/ARCHIVE-label.png');
-	--pd-theme-switch-img: url('../../commons/images/theme-switch.png');
 }
 
 body.pd-dark-theme {
 	--bg-color: var(--color-lead);
 	--fg-color: var(--color-snow);
-	--btn-hover-mask: rgba(255, 255, 255, 0.1);
 	--code-blk-bg: var(--color-licorice);
-	--header-bg-color: var(--color-licorice);
-
-	--pd-stack-label-img: url('../../commons/images/STACK-label-dark.png');
-	--pd-heap-label-img: url('../../commons/images/HEAP-label-dark.png');
-	--pd-archive-label-img: url('../../commons/images/ARCHIVE-label-dark.png');
-	--pd-theme-switch-img: url('../../commons/images/theme-switch-dark.png');
 }
 
 body {
@@ -125,9 +111,7 @@ body {
 	display: none;
 } */
 
-/* =========================
-   Typography
-   ========================= */
+/* --- Typography --- */
 
 p {
 	margin-top: 0;          /* no margin before paragraph */
@@ -172,51 +156,50 @@ pre {
 	margin-bottom: calc(24px * var(--var-scaling));
 }
 
+a {
+	text-decoration: none;
+	color: inherit;
+}
+
 /* =========================
-   Components
+   Micro-Tailwind (pd-*)
    ========================= */
 
+/* --- Components --- */
+
 .pd-btn {
+	/* variables */
+	--pd-btn-height: 128px;
+	--pd-btn-width: 128px;
+	--pd-btn-bg-color: transparent;
+	--pd-btn-bg-img: none;
+	--pd-btn-hover-mask: rgba(0, 0, 0, 0.1);
 	/* default size */
-	height: calc(var(--pd-height, 128px) * var(--var-scaling));
-	width: calc(var(--pd-width, 128px) * var(--var-scaling));
+	height: calc(var(--pd-btn-height) * var(--var-scaling));
+	width: calc(var(--pd-btn-width) * var(--var-scaling));
 	/* visual */
-	border-width: 0;                     /* no border */
-	background-color: var(--pd-bg-color, transparent);
-	background-image: var(--pd-bg-img, none);
+	border-width: 0;                                           /* no border */
+	background-color: var(--pd-btn-bg-color);
+	background-image: var(--pd-btn-bg-img);
 	background-repeat: no-repeat;
 	background-position: center;
 	background-size: contain;
 	/* behavior */
 	cursor: pointer;}
 
+.pd-dark-theme .pd-btn {
+	/* variables override */
+	--pd-btn-hover-mask: rgba(255, 255, 255, 0.1);
+	/* visual override */
+	background-image: var(--pd-btn-bg-img-dark, var(--pd-btn-bg-img)); }
+
 .pd-btn:hover {
-	--pd-bg-color: var(--btn-hover-mask); }
+	--pd-btn-bg-color: var(--pd-btn-hover-mask); }
 
 .pd-dummy {
 	/* pure constructive, for layout purpose */
 	pointer-events: none;
 	user-select: none;
-}
-
-.pd-header-bg-color {
-	--pd-bg-color: var(--header-bg-color);
-}
-
-.pd-stack-label-img {
-	--pd-bg-img: var(--pd-stack-label-img);
-}
-
-.pd-heap-label-img {
-	--pd-bg-img: var(--pd-heap-label-img);
-}
-
-.pd-archive-label-img {
-	--pd-bg-img: var(--pd-archive-label-img);
-}
-
-.pd-theme-switch-img {
-	--pd-bg-img: var(--pd-theme-switch-img);
 }
 
 .pd-main-scrollable {
@@ -228,14 +211,7 @@ pre {
 	overflow-x: hidden;
 }
 
-a {
-	text-decoration: none;
-	color: inherit;
-}
-
-/* =========================
-   Micro-Tailwind (pd-*)
-   ========================= */
+/* --- Utilities --- */
 
 /* layout */
 .pd-flex-container { display: flex; }
@@ -291,15 +267,19 @@ a {
 /* Coloring */
 .pd-bg-null { background-color: transparent; }
 .pd-bg-color {
-	background-color: var(--pd-bg-color, var(--color-mercury)); }
+	--pd-bg-color: var(--color-mercury);
+	background-color: var(--pd-bg-color); }
+
+.pd-dark-theme .pd-bg-color {
+	background-color: var(--pd-bg-color-dark, var(--pd-bg-color)); }
+
 .pd-bg-grad-x {
 	background-image: linear-gradient(to right,
 		var(--pd-grad-color-start, var(--color-lime)),
 		var(--pd-grad-color-end, var(--color-frosted-glass))); }
 
-/* =========================
-   Debugging utilities
-   ========================= */
+/* --- Debugging utilities --- */
+
 .pd-debug-border {
 	--debug-border-thickness: 2px;
 	--debug-border-color: var(--color-maraschino);
