@@ -1,6 +1,0 @@
-[submodule "mmd2html"]
-	path = mmd2html
-	url = https://github.com/madpang/mmd2html
-[submodule "zettelkasten"]
-	path = zettelkasten
-	url = git@github.com:madpang/zettelkasten.git
