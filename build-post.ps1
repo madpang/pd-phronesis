@@ -10,6 +10,7 @@
 	3. Write the output to the target HTML file.
 
 	@note:
+	- The template file path is hardcoded, since it is part of the framework.
 	- In step [2], the mmd2html need a temporary output file to store the converted HTML content, which will be read back to insert into the template.
 	- The temporary file will be placed alongside the target HTML file, with a ".tmp" suffix.
 	- This script assumes path arguments do not contain spaces.
@@ -21,9 +22,8 @@
 #>
 
 param(
-	[Parameter(Mandatory = $True, Position = 1)][string]$path2html,     # [3]
-	[Parameter(Mandatory = $True, Position = 2)][string]$path2txt,      # [2]
-	[Parameter(Mandatory = $True, Position = 3)][string]$path2template  # [1]
+	[Parameter(Mandatory = $True, Position = 1)][string]$path2html,     # @output
+	[Parameter(Mandatory = $True, Position = 2)][string]$path2txt       # @input
 )
 
 $isDebug = $true
@@ -34,6 +34,13 @@ $toolPath = Join-Path -Path $scriptRoot -ChildPath 'tools/mmd2html/app/build/lib
 if (-not (Test-Path $toolPath)) {
 	@("HTML conversion tool not found.", "Expected converter path: $toolPath", "Make sure submodule is initialized.") -join [Environment]::NewLine | Write-Error
 	exit -1
+}
+
+# === Verify the template file exists
+$path2template = Join-Path -Path $scriptRoot -ChildPath 'templates/post-template.html'
+if (-not (Test-Path $path2template)) {
+	"Template file not found: $path2template" | Write-Error
+	exit -3
 }
 
 # === Convert the source text to HTML
@@ -91,11 +98,6 @@ if (-not $browserTabTitle) {
 }
 
 # --- Read the template HTML file
-if (-not (Test-Path $path2template)) {
-	"Template file not found: $path2template" | Write-Error
-	exit -3
-}
-
 $templateLines = Get-Content -Path $path2template -Encoding utf8
 
 # --- Assemble the output HTML file
