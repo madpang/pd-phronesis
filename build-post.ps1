@@ -26,7 +26,7 @@ param(
 	[Parameter(Mandatory = $True, Position = 2)][string]$path2txt       # @input
 )
 
-$is_debug = $true
+$is_debug = $false
 
 # === Verify the tool path exists
 $script_root = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
