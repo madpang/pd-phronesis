@@ -1,6 +1,6 @@
 #! /usr/bin/env pwsh -NoProfile
 <#
-	@file: build-post.ps1
+	@file: pd-phronesis/build-post.ps1
 	
 	@brief: Build a single HTML post from the manuscript.
 
@@ -9,117 +9,151 @@
 	2. Use the mmd2html tool to convert the source text to HTML, and insert it into the anchor point in the template.
 	3. Write the output to the target HTML file.
 
+	@note:
+	- The template file path is hardcoded, since it is part of the framework.
+	- In step [2], the mmd2html need a temporary output file to store the converted HTML content, which will be read back to insert into the template.
+	- The temporary file will be placed alongside the target HTML file, with a ".tmp" suffix.
+	- This script assumes path arguments do not contain spaces.
+	- It is better to work with absolute paths.
+
 	@author: madpang
 
-	@date: [created: 2025-05-18, updated: 2025-08-11]
+	@date: [created: 2025-05-18, updated: 2026-02-11]
 #>
 
 param(
-	[Parameter(Mandatory = $True, Position = 1)][string]$path2html,
-	[Parameter(Mandatory = $True, Position = 2)][string]$path2txt,
-	[Parameter(Mandatory = $True, Position = 3)][string]$path2template
+	[Parameter(Mandatory = $True, Position = 1)][string]$path2html,     # @output
+	[Parameter(Mandatory = $True, Position = 2)][string]$path2txt       # @input
 )
 
-$kTempOutput = "tmp-output.html" # @note: this is an intermediate file, it is an temporary usage, and will be optimized in the future.
+$is_debug = $false
 
-$mConverter = 'java -jar ./mmd2html/app/build/libs/mmd2html.jar'
-
-$mCmd = @($mConverter, $path2txt, $kTempOutput) -join ' '
-
-Write-Host "[DEBUG  ] Converting source text to HTML: $mCmd"
-
-# --- Convert the source text to HTML
-Invoke-Expression $mCmd
-
-if ($LASTEXITCODE -ne 0) {
-	Write-Host "[ERROR  ] mmd2html conversion failed with exit code $LASTEXITCODE."
-	exit $LASTEXITCODE
+# === Verify the tool path exists
+$script_root = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
+$tool_path = Join-Path -Path $script_root -ChildPath 'tools/mmd2html/app/build/libs/mmd2html.jar'
+if (-not (Test-Path $tool_path)) {
+	@("HTML conversion tool not found.", "Expected converter path: $tool_path", "Make sure submodule is initialized.") -join [Environment]::NewLine | Write-Error
+	exit -1
 }
 
-if (-not (Test-Path $kTempOutput)) {
-	Write-Host "[ERROR  ] mmd2html did not generate output file."
-	exit 1
+# === Verify the template file exists
+$path2template = Join-Path -Path $script_root -ChildPath 'templates/post-template.html'
+if (-not (Test-Path $path2template)) {
+	"Template file not found: $path2template" | Write-Error
+	exit -3
 }
 
-$formattedLines = Get-Content -Path $kTempOutput -Encoding utf8
+# === Convert the source text to HTML
+
+# --- Create the containing folder of the HTML post if it does not exist
+$post_dir = Split-Path -Path $path2html -Parent
+if (-not (Test-Path $post_dir)) {
+	try {
+		New-Item -ItemType Directory -Path $post_dir | Out-Null
+	} catch {
+		"Failed to create output directory: $post_dir" | Write-Error
+		exit -4
+	}
+}
+
+# --- Prepare temporary output file path
+$path2converted = $path2html + ".tmp";
+
+$cmd = @('java', '-jar', $tool_path, $path2txt, $path2converted) -join ' '
+
+if ($is_debug) {
+	@("[DEBUG] Converting source text to HTML:", "> $cmd") -join [Environment]::NewLine | Write-Host
+}
+
+# --- Invoke the conversion command
+Invoke-Expression $cmd
+
+$tool_exit_code = $LASTEXITCODE
+if ($tool_exit_code -ne 0) {
+	"Conversion failed with exit code $tool_exit_code." | Write-Error
+	exit $tool_exit_code
+}
+
+if (-not (Test-Path $path2converted)) {
+	"Conversion did not generate expected output file: $path2converted" | Write-Error
+	exit -2
+}
+
+# === Assemble the final HTML file
+
+$formatted_lines = Get-Content -Path $path2converted -Encoding utf8
 
 # --- Extract h1 heading (for display in the web browser tab)
-$browserTabTitle = $null
-foreach ($line in $formattedLines) {
+$browser_tab_title = $null
+foreach ($line in $formatted_lines) {
 	if ($line -match '<h1>(.*)</h1>') {
-		$browserTabTitle = $Matches[1]
+		$browser_tab_title = $Matches[1]
 		break
 	}
 }
-if (-not $browserTabTitle) {
-	Write-Host "[ERROR  ] article must have a title."
-	exit 1
+
+if (-not $browser_tab_title) {
+	"Article must have a title." | Write-Error
+	exit -10
 }
 
 # --- Read the template HTML file
-if (-not (Test-Path $path2template)) {
-	Write-Host "[ERROR  ] Template file not found: $path2template"
-	exit 1
-}
-
-$templateLines = Get-Content -Path $path2template
+$template_lines = Get-Content -Path $path2template -Encoding utf8
 
 # --- Assemble the output HTML file
-$authorInfo = "MadPang"
-$inBlockComment = $false
-$outputLines = @()
-for ($ii = 0; $ii -lt $templateLines.Count; $ii++) {
-	$line = $templateLines[$ii]
+$author_info = "MadPang"
+$is_in_blk_comment = $false
+$output_lines = @()
+for ($ii = 0; $ii -lt $template_lines.Count; $ii++) {
+	$line = $template_lines[$ii]
 	# Check if the line is a block comment start, assuming only world character, `@`, and `:` are allowed
 	if ($line -match '^<!--\s*(?<id>[@:\w]+)\s*$') {
-		$inBlockComment = $true
+		$is_in_blk_comment = $true
 		$id = $Matches['id']
 		if ($id -eq '@ANCHOR:NULL') {
-			$outputLines += '<!-- @note: This file is auto-generated. MANUAL EDITS WILL BE LOST -->'
+			$output_lines += '<!-- @note: This file is auto-generated. MANUAL EDITS WILL BE LOST -->'
 		}
 		continue
 	}
 	if ($line -match '^-->$') {
-		$inBlockComment = $false
+		$is_in_blk_comment = $false
 		continue
 	}
-	if ($inBlockComment) {
+	if ($is_in_blk_comment) {
 		# Skip the block comment
 		continue
 	}
 	if ($line -match '^<!--\s*@ANCHOR:TITLE\s*-->$') {
 		# Insert the title text into the anchor point
-		$outputLines += "$browserTabTitle | $authorInfo"
+		$output_lines += "$browser_tab_title | $author_info"
 		continue
 	}
 	if ($line -match "^<!--\s*@ANCHOR:ARTICLE\s*-->$") {
 		# Insert the formatted lines into the anchor point
-		$outputLines += $formattedLines
+		$output_lines += $formatted_lines
 		continue
 	}
 
 	# Add normal line to the output
-	$outputLines += $line
+	$output_lines += $line
+}
+
+# === Cleanup temporary files
+if (Test-Path $path2converted) {
+	if ($is_debug) {
+		Write-Host "[DEBUG] Cleaning up temporary file: $path2converted"
+	}
+	Remove-Item -Path $path2converted
 }
 
 # === Write the output to HTML file
-
-# Create the containing folder of the HTML post if it does not exist
-$outputDir = Split-Path -Path $path2html -Parent
-if (-not (Test-Path $outputDir)) {
-	try {
-		New-Item -ItemType Directory -Path $outputDir | Out-Null
-	} catch {
-		Write-Host "[ERROR  ] Failed to create output directory: $outputDir"
-		exit 1
-	}
-}
-
 try {
-	Set-Content -Path $path2html -Value $outputLines -Encoding utf8
-	Write-Host "[DEBUG  ] Successfully created: $path2html"
+	if ($is_debug) {
+		"[DEBUG] Writing output HTML file: $path2html" | Write-Host
+	}	
+	Set-Content -Path $path2html -Value $output_lines -Encoding utf8
 	exit 0
 } catch {
-	Write-Host "[ERROR  ] Failed to write output file: $path2html"
-	exit 1
+	"Failed to write output file: $path2html" | Write-Error
+	exit -5
 }

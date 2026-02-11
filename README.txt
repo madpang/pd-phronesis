@@ -1,69 +1,51 @@
 ``` header
-@file: pd-wysheid/README.txt
+@file: pd-phronesis/README.txt
 @author: madpang
-@date: [created: 2025-02-22, updated: 2026-01-12]
+@date: [created: 2025-02-22, updated: 2026-02-11]
 ```
 
-# pd-wysheid
+# pd-phronesis
 
-This is a personal knowledge system, in the form of a blog website, codename "Wysheid" (pronounced "vay-sayd"), which means "wisdom" in Afrikaans.
-
-It is a collection of notes, articles, and essays on various topics.
-
-The website is built in a bare-bones, minimalistic style, using HTML, CSS, and JavaScript, without any static site generation frameworks.
-
-The content is written in plain text, with markdown-style custom markup.
-It is converted to HTML using a custom-built converter (see [mmd2html](https://github.com/madpang/mmd2html)).
+This is a self-contained framework for blog site building, in a bare-bones, minimalistic style, using HTML, CSS, and JavaScript, without any 3rd party static site generation scaffold.
 
 ## Organization
 
-This repository includes two submodules:
-- `zettelkasten/`: the post manuscripts (plain text source).
-- `mmd2html/`: the plain text → HTML converter used by the build scripts.
+This repository includes a single submodule:
+- `tools/mmd2html`: the plain text → HTML converter used by the build scripts.
 
 The folder structure of the project is as follows:
 ``` tree
 .
+|- README.md         # symlink --> README.txt
 |- README.txt
-|- README.md      # symlink to README.txt
-|- tickets.txt    # issue tracker, progress log
-|- index.html     # entry point of the website
-|- artifacts/     # generated HTML files of the posts
-|  |- <post_id>
-|  |  |- <post_id>.html
-|  |  |- media/
-|- commons/       # common assets
+|- tickets.txt       # issue tracker, progress log
+|- commons/          # common resources, to be deployed
 |  |- fonts/
 |  |- images/
 |  |- styles/
 |  |- scripts/
-|- zettelkasten/  # [submodule] manuscripts of the posts
-|  |- <post_id>
-|  |  |- <post_id>.txt
-|  |  |- media/
-|- contents       # symlink to zettelkasten
-|- mmd2html/      # [submodule] custom plain text markup to HTML converter
-|- tools          # symlink to mmd2html
-|- build-post.ps1 # script to build a single blog post
-|- build.ps1      # script to build blogs for the website
-|- scripts/       # utility scripts
+|- tools
+|  |- mmd2html/      # [submodule] custom plain text markup to HTML converter
+|- build-post.ps1    # script to build a single blog post
 ```
 
-## Branches
-
-- `develop`: working branch used for content authoring and builds (contains `contents/` and build scripts).
-- `gh-pages`: deployment branch that hosts generated `artifacts/` for GitHub Pages.
-- `main`: stable source snapshot and repository overview.
-
-## How to build
+## Usage
 
 The build workflow is **PowerShell**-based and uses the `mmd2html` converter.
+
+To build a HTML post from a plain text file:
+``` powershell
+pwsh -NoProfile ./build-post.ps1 <path-to-output.html> <path-to-input.txt>
+```
+Note, it is recommended to use absolute path.
+
+## Additional notes
 
 ### Prerequisites
 
 - PowerShell 7+
 - Java (required to run the converter JAR)
-- The `mmd2html` and `zettelkasten` submodules initialized
+- The submodule `mmd2html` being initialized and JAR being built (see its README for more details).
 
 ### Initialize submodules
 
@@ -71,35 +53,9 @@ The build workflow is **PowerShell**-based and uses the `mmd2html` converter.
 git submodule update --init --recursive
 ```
 
-### Build the converter
-
-Build the converter so the JAR exists at `./mmd2html/app/build/libs/mmd2html.jar` (see the submodule for exact build commands).
-
-### Build all posts (full site)
-
-``` powershell
-pwsh -NoProfile ./build.ps1
-```
-This runs the three-stage build:
-1. `scripts/prepare-build.ps1` compares `contents/` against `artifacts/` and prepares post lists.
-2. `scripts/export-build.ps1` calls `build-post.ps1` for every new/updated post.
-3. `scripts/deploy-build.ps1` copies `tmp-ws/artifacts/` into `artifacts/` (for `gh-pages`).
-
-### Build a single post
-
-``` powershell
-pwsh -NoProfile ./build-post.ps1 <path-to-output.html> <path-to-input.txt> ./commons/templates/post-template.html
-```
-Internally, the converter is invoked as:
-``` text
-java -jar ./mmd2html/app/build/libs/mmd2html.jar <input.txt> <output.html>
-```
-
 ## License info.
 
 The CSS and JavaScript files are free to use, modify, and distribute.
 
-The content of those articles are the intellectual creation of the author, and are thus copyrighted.
-
 [IBM Plex](https://www.ibm.com/plex/) series fonts are used as the primary typefaces.
-It is an open-source font family, and can be obtained from [GitHub](https://github.com/IBM/plex). 
+It is an open-source font family, and can be obtained from [GitHub](https://github.com/IBM/plex).
