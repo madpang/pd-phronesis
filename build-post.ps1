@@ -1,25 +1,25 @@
-#! /usr/bin/env pwsh -NoProfile
-<#
-	@file: pd-phronesis/build-post.ps1
-	
-	@brief: Build a single HTML post from the manuscript.
-
-	@details:
-	1. Read the template HTML file.
-	2. Use the mmd2html tool to convert the source text to HTML, and insert it into the anchor point in the template.
-	3. Write the output to the target HTML file.
-
-	@note:
-	- The template file path is hardcoded, since it is part of the framework.
-	- In step [2], the mmd2html need a temporary output file to store the converted HTML content, which will be read back to insert into the template.
-	- The temporary file will be placed alongside the target HTML file, with a ".tmp" suffix.
-	- This script assumes path arguments do not contain spaces.
-	- It is better to work with absolute paths.
-
-	@author: madpang
-
-	@date: [created: 2025-05-18, updated: 2026-02-11]
-#>
+#!/usr/bin/env pwsh
+<##
+ # @file build-post.ps1
+ # 
+ # @brief Build a single HTML post from the manuscript.
+ # 
+ # @details
+ # 1. Read the template HTML file.
+ # 2. Use the mmd2html tool to convert the source text to HTML, and insert it into the anchor point in the template.
+ # 3. Write the output to the target HTML file.
+ # 
+ # @note
+ # - The template file path is hardcoded, since it is part of the framework.
+ # - In step [2], the mmd2html need a temporary output file to store the converted HTML content, which will be read back to insert into the template.
+ # - The temporary file will be placed alongside the target HTML file, with a ".tmp" suffix.
+ # - This script assumes path arguments do not contain spaces.
+ # - It is better to work with absolute paths.
+ # 
+ # @author [madpang, claude]
+ # 
+ # @date [created: 2025-05-18, updated: 2026-10-31]
+##>
 
 param(
 	[Parameter(Mandatory = $True, Position = 1)][string]$path2html,     # @output
@@ -28,13 +28,7 @@ param(
 
 $is_debug = $false
 
-# === Verify the tool path exists
 $script_root = Split-Path -Path $MyInvocation.MyCommand.Path -Parent
-$tool_path = Join-Path -Path $script_root -ChildPath 'tools/mmd2html/app/build/libs/mmd2html.jar'
-if (-not (Test-Path $tool_path)) {
-	@("HTML conversion tool not found.", "Expected converter path: $tool_path", "Make sure submodule is initialized.") -join [Environment]::NewLine | Write-Error
-	exit -1
-}
 
 # === Verify the template file exists
 $path2template = Join-Path -Path $script_root -ChildPath 'templates/post-template.html'
@@ -59,14 +53,26 @@ if (-not (Test-Path $post_dir)) {
 # --- Prepare temporary output file path
 $path2converted = $path2html + ".tmp";
 
-$cmd = @('java', '-jar', $tool_path, $path2txt, $path2converted) -join ' '
+$cmd = @("mmd2html", $path2txt, $path2converted) -join ' '
 
 if ($is_debug) {
 	@("[DEBUG] Converting source text to HTML:", "> $cmd") -join [Environment]::NewLine | Write-Host
 }
 
 # --- Invoke the conversion command
-Invoke-Expression $cmd
+# @note mmd2html is expected in PATH (installed to `$HOME/.local/bin/`); if it is not found, run install-tools.ps1 and retry with the installed path.
+try {
+	Invoke-Expression $cmd
+} catch [System.Management.Automation.CommandNotFoundException] {
+	$install_dir = Join-Path -Path $HOME -ChildPath '.local/bin'
+	& (Join-Path -Path $script_root -ChildPath 'install-tools.ps1') $install_dir
+	if ($LASTEXITCODE -ne 0) {
+		@("HTML conversion tool mmd2html not found.", "Run install-tools.ps1 to install it.") -join [Environment]::NewLine | Write-Error
+		exit -1
+	}
+	$cmd = @((Join-Path -Path $install_dir -ChildPath 'mmd2html'), $path2txt, $path2converted) -join ' '
+	Invoke-Expression $cmd
+}
 
 $tool_exit_code = $LASTEXITCODE
 if ($tool_exit_code -ne 0) {
