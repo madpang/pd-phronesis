@@ -1,56 +1,71 @@
-``` header
-@file: pd-phronesis/README.txt
-@author: madpang
-@date: [created: 2025-02-22, updated: 2026-02-11]
-```
+---
+file: README.txt
+author: [madpang, claude]
+date: [created: 2025-02-22, updated: 2026-11-01]
+---
 
 # pd-phronesis
 
-This is a self-contained framework for blog site building, in a bare-bones, minimalistic style, using HTML, CSS, and JavaScript, without any 3rd party static site generation scaffold.
+**pd-phronesis** is a self-contained framework for blog site building, in a bare-bones, minimalistic style, using HTML, CSS, and JavaScript, without any 3rd party static site generation scaffold.
 
-## Organization
+## Repository structure
 
-This repository includes a single submodule:
-- `tools/mmd2html`: the plain text → HTML converter used by the build scripts.
-
-The folder structure of the project is as follows:
+The following ASCII graph depicts the structure of this repo.:
 ``` tree
-.
-|- README.md         # symlink --> README.txt
-|- README.txt
-|- tickets.txt       # issue tracker, progress log
-|- commons/          # common resources, to be deployed
+pd-phronesis
+|- README.txt            # *this* doc
+|- README.md             # symlink --> README.txt
+|- build-post.ps1        # executable script to build a single blog post
+|- commons/              # common resources, to be deployed
 |  |- fonts/
 |  |- images/
 |  |- styles/
 |  |- scripts/
+|- install-tools.ps1     # executable script to install the necessary tools
 |- tools
-|  |- mmd2html/      # [submodule] custom plain text markup to HTML converter
-|- build-post.ps1    # script to build a single blog post
+|  |- mmd2html/          # submodule of custom text converter
+|- tickets.txt           # issue tracker, progress log
 ```
 
 ## Usage
 
-The build workflow is **PowerShell**-based and uses the `mmd2html` converter.
+The build workflow is **PowerShell** based and uses the `mmd2html` converter.
 
 To build a HTML post from a plain text file:
-``` powershell
-pwsh -NoProfile ./build-post.ps1 <path-to-output.html> <path-to-input.txt>
+``` cmd
+./build-post.ps1 <path-to-output.html> <path-to-input.txt>
 ```
-Note, it is recommended to use absolute path.
+Note, it is recommended to use absolute path for input and output.
 
 ## Additional notes
 
 ### Prerequisites
 
 - PowerShell 7+
-- Java (required to run the converter JAR)
-- The submodule `mmd2html` being initialized and JAR being built (see its README for more details).
+- The `mmd2html` executable in `PATH`, installed by `install-tools.ps1` to `$HOME/.local/bin/` from the latest GitHub release (Linux x86_64 only).
 
-### Initialize submodules
+If `mmd2html` is not found, `build-post.ps1` runs `install-tools.ps1`, which asks for confirmation (y/N), and then retries with the installed executable.
 
-``` powershell
-git submodule update --init --recursive
+The submodule is NOT needed to build posts; it is only needed to if you want to build `mmd2html` from source.
+
+### Install mmd2html
+
+``` cmd
+./install-tools.ps1 [<install-dir>]
+```
+The install dir defaults to `$HOME/.local/bin`.
+
+### Build mmd2html from source
+
+Initialize the submodules first:
+``` cmd
+git submodule update --init
+```
+
+Then build the submodule *mmd2html* (note, it ships a Docker image definition with the GraalVM toolchain):
+``` bash
+./tools/mmd2html/.devcontainer/build.sh
+docker run --rm -v "$PWD/tools/mmd2html:/mnt/datastore/cowork/20_repo/mmd2html" -w /mnt/datastore/cowork/20_repo/mmd2html mmd2html-dev:latest ./gradlew nativeCompile
 ```
 
 ## License info.
