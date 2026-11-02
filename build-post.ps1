@@ -18,7 +18,7 @@
  # 
  # @author [madpang, claude]
  # 
- # @date [created: 2025-05-18, updated: 2026-10-31]
+ # @date [created: 2025-05-18, updated: 2026-11-02]
 ##>
 
 param(
@@ -60,17 +60,21 @@ if ($is_debug) {
 }
 
 # --- Invoke the conversion command
-# @note mmd2html is expected in PATH (installed to `$HOME/.local/bin/`); if it is not found, run install-tools.ps1 and retry with the installed path.
+# @note mmd2html is expected in PATH (installed to `$HOME/.local/bin/`); if it is not found, use `$HOME/.local/bin/mmd2html` when it exists, otherwise run install-tools.ps1 first.
 try {
 	Invoke-Expression $cmd
 } catch [System.Management.Automation.CommandNotFoundException] {
 	$install_dir = Join-Path -Path $HOME -ChildPath '.local/bin'
-	& (Join-Path -Path $script_root -ChildPath 'install-tools.ps1') $install_dir
-	if ($LASTEXITCODE -ne 0) {
-		@("HTML conversion tool mmd2html not found.", "Run install-tools.ps1 to install it.") -join [Environment]::NewLine | Write-Error
-		exit -1
+	$tool_path = Join-Path -Path $install_dir -ChildPath 'mmd2html'
+	# @note The tool may be installed already, but its dir is not in PATH; reuse it instead of asking to install again.
+	if (-not (Test-Path $tool_path)) {
+		& (Join-Path -Path $script_root -ChildPath 'install-tools.ps1') $install_dir
+		if ($LASTEXITCODE -ne 0) {
+			@("HTML conversion tool mmd2html not found.", "Run install-tools.ps1 to install it.") -join [Environment]::NewLine | Write-Error
+			exit -1
+		}
 	}
-	$cmd = @((Join-Path -Path $install_dir -ChildPath 'mmd2html'), $path2txt, $path2converted) -join ' '
+	$cmd = @($tool_path, $path2txt, $path2converted) -join ' '
 	Invoke-Expression $cmd
 }
 

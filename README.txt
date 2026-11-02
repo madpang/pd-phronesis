@@ -44,7 +44,8 @@ Note, it is recommended to use absolute path for input and output.
 - PowerShell 7+
 - The `mmd2html` executable in `PATH`, installed by `install-tools.ps1` to `$HOME/.local/bin/` from the latest GitHub release (Linux x86_64 only).
 
-If `mmd2html` is not found, `build-post.ps1` runs `install-tools.ps1`, which asks for confirmation (y/N), and then retries with the installed executable.
+If `mmd2html` is not in `PATH`, `build-post.ps1` uses `$HOME/.local/bin/mmd2html` when it exists.
+Otherwise it runs `install-tools.ps1`, which asks for confirmation (y/N), and then retries with the installed executable.
 
 The submodule is NOT needed to build posts; it is only needed to if you want to build `mmd2html` from source.
 
